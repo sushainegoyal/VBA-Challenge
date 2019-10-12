@@ -1,0 +1,133 @@
+Sub subalpha():
+
+    Dim ws As Worksheet
+    For Each ws In Worksheets
+    
+    'counting the number of rows
+        Dim rows As Long
+        ws.Activate
+        rows = 0
+        For a = 2 To 1000000
+            If (ws.Cells(a, 1) = 0) Then
+                rows = a - 1
+                Exit For
+            End If
+        Next a
+        
+        ' counting the unique values in ticker in the sorted list
+        Dim tc As Integer
+        Dim c, h As Integer
+        
+        c = 1
+        h = 1
+        tc = 0
+        For b = 2 To rows
+            If (ws.Cells(b, 1) <> ws.Cells(b + 1, 1)) Then
+                tc = tc + 1
+            End If
+        Next b
+        
+        Dim myticker() As String
+        Dim myopendate() As Double
+        Dim myclosedate() As Double
+        Dim totalstocks() As Double
+                
+        ReDim myopendate(tc + 1)
+        ReDim myticker(tc + 1)
+        ReDim myclosedate(tc + 1)
+        ReDim totalstocks(tc + 1)
+        
+        For d = 1 To rows
+            
+            If (ws.Cells(d, 1) = ws.Cells(d + 1, 1)) Then
+                totalstocks(h) = totalstocks(h) + ws.Cells(d, 7)
+            Else
+                myticker(c) = ws.Cells(d + 1, 1).Value
+                myopendate(c) = ws.Cells(d + 1, 3).Value
+                If d <> 1 Then
+                    myclosedate(c - 1) = ws.Cells(d, 6).Value
+                    totalstocks(h) = totalstocks(h) + ws.Cells(d, 7).Value
+                End If
+                h = h + 1
+                c = c + 1
+            End If
+        Next d
+        
+        'putting the content in excel
+        
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percentage Change"
+        ws.Cells(1, 12).Value = "Stock Volume"
+       
+        ws.Cells(2, 14).Value = "Greatest % Increase"
+        ws.Cells(3, 14).Value = "Greatest % Decrease"
+        ws.Cells(4, 14).Value = "Greatest total volume"
+        ws.Cells(1, 15).Value = "Ticker"
+        ws.Cells(1, 16).Value = "Value"
+        
+        
+        Dim a1, b1 As Double
+        Dim totalvol As Double
+            
+        For e = 1 To tc + 1
+
+            ws.Cells(e + 1, 9) = myticker(e)
+            ws.Cells(e + 1, 10) = myclosedate(e) - myopendate(e)
+            If ws.Cells(e + 1, 10) < 0 Then
+                ws.Cells(e + 1, 10).Interior.Color = RGB(255, 0, 0)
+            Else
+                ws.Cells(e + 1, 10).Interior.Color = RGB(0, 255, 0)
+            End If
+            
+            If (myopendate(e) <> 0) Then
+                ws.Cells(e + 1, 11).Formula = Round((100 * (myclosedate(e) - myopendate(e)) / (myopendate(e))), 2)
+                
+            ElseIf (ws.Cells(e, 10) = 0) Then
+                ws.Cells(e + 1, 11) = 0
+            Else
+                ws.Cells(e + 1, 11) = 100
+            End If
+            ws.Cells(e + 1, 12) = totalstocks(e)
+        Next e
+        
+            
+        'putting the maximums as a challenge
+        
+        Dim maxi As Double
+        Dim maxinc As Double
+        Dim maxdec As Double
+        maxi = 0
+        maxinc = 0#
+        maxdec = 0#
+        Dim t1, t2, t3 As String
+        
+        
+        For g = 0 To tc
+            If (ws.Cells(g + 2, 12) > maxi) Then
+                maxi = ws.Cells(g + 2, 12)
+                t1 = ws.Cells(g + 2, 9)
+            End If
+            If (ws.Cells(g + 2, 11) > maxinc) Then
+                maxinc = ws.Cells(g + 2, 11)
+                t2 = ws.Cells(g + 2, 9)
+            End If
+            If (ws.Cells(g + 2, 11) < maxdec) Then
+                maxdec = ws.Cells(g + 2, 11)
+                t3 = ws.Cells(g + 2, 9)
+            End If
+            
+        Next g
+        
+        ws.Cells(2, 16).Value = maxinc
+        ws.Cells(3, 16).Value = maxdec
+        ws.Cells(4, 16).Value = maxi
+        ws.Cells(2, 15).Value = t1
+        ws.Cells(3, 15).Value = t2
+        ws.Cells(4, 15).Value = t3
+        ws.Columns("A:O").AutoFit
+        
+    Next
+
+End Sub
+
